@@ -25,30 +25,38 @@ router.post('/', auth, async (req, res, next) => {
 });
 
 // GET /api/notes?tag=work&search=project
+// GET /api/notes?tag=work&search=project
+// GET /api/notes?tag=work&search=project
 router.get('/', auth, async (req, res, next) => {
   try {
     const { tag, search, page = 1, limit = 20 } = req.query;
-    const filter = { owner: req.user._id };
 
+    const filter = {};
+
+    // 🔍 Filter by tag if provided
     if (tag) {
-      // match tag case-insensitive
-      filter.tags = { $in: [ new RegExp('^' + tag + '$', 'i') ] };
+      filter.tags = { $in: [new RegExp('^' + tag + '$', 'i')] };
     }
 
+    // 🔍 Search in title/content if provided
     if (search) {
-      // search in title or content (case-insensitive)
       const q = new RegExp(search, 'i');
       filter.$or = [{ title: q }, { content: q }];
     }
 
     const skip = (Math.max(1, parseInt(page)) - 1) * Math.max(1, parseInt(limit));
-    const notes = await Note.find(filter).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit));
+    const notes = await Note.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
     const total = await Note.countDocuments(filter);
     res.json({ total, page: parseInt(page), limit: parseInt(limit), notes });
   } catch (err) {
     next(err);
   }
 });
+
 
 // GET single note - GET /api/notes/:id
 router.get('/:id', auth, async (req, res, next) => {
@@ -93,3 +101,4 @@ router.delete('/:id', auth, async (req, res, next) => {
 });
 
 module.exports = router;
+// working fine
